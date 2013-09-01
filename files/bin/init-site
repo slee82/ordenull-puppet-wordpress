@@ -35,8 +35,8 @@ else
 
       print_info "Verifying the contents of ${GIT_REPO}"
 
-      git cat-file -e origin/master:public/wp-config.php > /dev/null 2>&1 || {
-        print_error "public/wp-config.php doesn't exist in ${GIT_REPO}, the repository is in a wrong format";
+      git cat-file -e origin/master:public/index.php > /dev/null 2>&1 || {
+        print_error "public/index.php doesn't exist in ${GIT_REPO}, the repository is in a wrong format";
         cleanup_all
         exit 1;
       }
