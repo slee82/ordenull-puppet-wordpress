@@ -1,0 +1,11 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${DIR}/../config"
+source "${DIR}/functions"
+
+wget -qO${DIR_TMP}/salts ${WP_SALTS} || { print_error "Failed to download generated salts from ${WP_SALTS}"; exit 1; }
+
+echo "<?php"          > ${DIR_PUBLIC}/wp-salts.php
+cat ${DIR_TMP}/salts >> ${DIR_PUBLIC}/wp-salts.php
+echo "?>"            >> ${DIR_PUBLIC}/wp-salts.php

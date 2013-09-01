@@ -1,0 +1,73 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${DIR}/../config"
+source "${DIR}/functions"
+
+ensure_database
+
+function cleanup_git {
+  rm -rf ${DIR_HOME}/.git
+  if [ "${DATABASE_CREATED}" -eq "1" ]; then
+    remove_database
+  fi
+}
+
+if [ -z "${GIT_REPO}" ]; then
+  print_warning "No GIT repository has been specified, performing a simple install"
+  install_wordpress
+  exit 0
+else
+  cd ${DIR_HOME}
+  git init
+  git remote add origin ${GIT_REPO}
+  git fetch || {
+    print_error "Unable to fetch from ${GIT_REPO}";
+    cleanup_git
+    exit 1;
+  }
+
+  if [[ $(git branch -a) =~ "master" ]]; then
+    if [ ! -z ${GIT_REPO} ]; then
+      
+      print_info "Verifying the contents of ${GIT_REPO}"
+
+      git cat-file -e origin/master:public/wp-config.php > /dev/null 2>&1 || {
+        print_error "public/wp-config.php doesn't exist in ${GIT_REPO}, the repository is in a wrong format";
+        cleanup_git
+        exit 1;
+      }
+
+      git cat-file -e origin/master:sql/database.sql > /dev/null 2>&1 || {
+        print_error "sql/database.sql doesn't exist in ${GIT_REPO}, the repository is in a wrong format";
+        cleanup_git
+        exit 1;
+      }
+
+      print_info "Checking out an existing WordPress website"
+      git reset --hard origin/master
+    fi
+  else
+    print_info "Creating a new WordPress website"
+    install_wordpress
+
+    echo "public/wp-puppet.php" >  ${DIR_HOME}/.gitignore
+    echo "public/wp-salts.php"  >> ${DIR_HOME}/.gitignore
+    echo ".puppet"              >> ${DIR_HOME}/.gitignore
+    chown ${OWNER}:${GROUP} ${DIR_HOME}/.gitignore
+
+    print_info "Checking in the new WordPress website"
+    dump_database
+    cd ${DIR_HOME}
+    git add .gitignore
+    git add *
+    git commit -q -a -m "Installed WordPress"
+    git push origin master || {
+      print_warning "Unable to push to ${GIT_REPO}, do you have write privileges?"
+      print_warning "We were using ~/root/.ssh/id_rsa.pub ssh key for this operation."
+      print_warning "You might want to run 'git push origin master' in ${DIR_HOME} yourself."
+    }
+  fi
+fi
+
+

@@ -1,0 +1,74 @@
+function print_error {
+  echo -e "\033[0;31m$1\033[0m"
+}
+
+function print_warning {
+  echo -e "\033[1;33m$1\033[0m"
+}
+
+function print_info {
+  echo -e "\033[0;32m$1\033[0m"
+}
+
+
+#
+# Will ensure that the database server is reachable and that the MySQL schema has been created
+#
+function ensure_database {
+
+  mysql ${MYSQL_AUTH} -e "SELECT 'SUCCESS'" > /dev/null 2>&1 || { 
+    print_error "Failed to connect to the database server with the supplied credentials"; 
+    exit 1;
+  }
+
+  DATABASE_CREATED=0
+  mysql ${MYSQL_AUTH} ${MYSQL_SCHEMA} -e "SELECT 'SUCCESS'" > /dev/null 2>&1 || { 
+    echo "Creating an empty database on ${MYSQL_HOST}, naming it ${MYSQL_SCHEMA}"
+    mysql ${MYSQL_AUTH} -e "CREATE DATABASE ${MYSQL_SCHEMA}" > /dev/null 2>&1 || {
+      print_error "Failed to create the database schema: ${MYSQL_SCHEMA}"; 
+      exit 1;
+    }
+    DATABASE_CREATED=1
+  }
+}
+
+
+#
+# Will dump the database
+#
+function dump_database {
+  print_info "Exporting the MySQL database to ${DIR_SQL}/database.sql"
+  mysqldump --extended-insert=FALSE --complete-insert=TRUE ${MYSQL_AUTH} ${MYSQL_SCHEMA} > ${DIR_SQL}/database.sql
+}
+
+
+#
+# Will remove the database
+#
+function remove_database {
+  print_warning "Cleaning up the newly created database: ${MYSQL_SCHEMA}"
+  mysql ${MYSQL_AUTH} -e "DROP DATABASE ${MYSQL_SCHEMA}" > /dev/null 2>&1
+}
+
+
+#
+# Will create a fresh WordPress install
+#
+function install_wordpress {
+  if [ ! -s "${WP_BUNDLE}" ]; then
+    print_info "Downloading the wordpress bundle to ${WP_BUNDLE}"
+    wget -qO${WP_BUNDLE} ${WP_MIRROR} || { print_error "Failed to download wordpress from ${WP_MIRROR}"; exit 1; }
+  fi
+
+  cd ${DIR_TMP}
+  tar -xf ${WP_BUNDLE} || { print_error "Failed to extract ${WP_BUNDLE}"; exit 1; }
+
+  chown -R ${OWNER}:${GROUP} ${DIR_TMP}/wordpress
+  rm ${DIR_TMP}/wordpress/wp-config-sample.php
+  mv ${DIR_TMP}/wordpress/* ${DIR_PUBLIC}
+  rm -r ${DIR_TMP}/wordpress
+
+  print_info "Initializing the WordPress database"
+  ${DIR_MANAGER}/bin/init-database || { print_error "Failed to initialize the WordPress database"; exit 1; }
+}
+

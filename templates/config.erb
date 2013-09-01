@@ -1,0 +1,27 @@
+MYSQL_HOST="<%= @mysql_host %>"
+MYSQL_USER="<%= @mysql_user %>"
+MYSQL_PASS="<%= @mysql_pass %>"
+MYSQL_SCHEMA="<%= @mysql_schema %>"
+
+if [ -z "${MYSQL_PASS}" ]; then
+  MYSQL_AUTH="-h${MYSQL_HOST} -u${MYSQL_USER}"
+else
+  MYSQL_AUTH="-h${MYSQL_HOST} -u${MYSQL_USER} -p${MYSQL_PASS}"
+fi
+
+DIR_HOME="<%= @home %>"
+DIR_PUBLIC="<%= @dir_public %>"
+DIR_SQL="<%= @dir_sql %>"
+DIR_MANAGER="<%= @dir_manager %>"
+DIR_TMP="<%= @dir_tmp %>"
+
+OWNER="<%= @owner %>"
+GROUP="<%= @group %>"
+
+WP_BUNDLE="/tmp/wordpress.tar.gz"
+WP_MIRROR="http://wordpress.org/latest.tar.gz"
+WP_SALTS="https://api.wordpress.org/secret-key/1.1/salt/"
+<% if @git_repo -%>
+
+GIT_REPO="<%= @git_repo %>"
+<%- end -%>
