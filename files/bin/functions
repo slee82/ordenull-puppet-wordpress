@@ -23,8 +23,8 @@ function ensure_database {
 
   DATABASE_CREATED=0
   mysql ${MYSQL_AUTH} ${MYSQL_SCHEMA} -e "SELECT 'SUCCESS'" > /dev/null 2>&1 || { 
-    echo "Creating an empty database on ${MYSQL_HOST}, naming it ${MYSQL_SCHEMA}"
-    mysql ${MYSQL_AUTH} -e "CREATE DATABASE ${MYSQL_SCHEMA}" > /dev/null 2>&1 || {
+    print_info "Creating an empty database on ${MYSQL_HOST}, naming it ${MYSQL_SCHEMA}"
+    mysql ${MYSQL_AUTH} -e "CREATE DATABASE ${MYSQL_SCHEMA}" || {
       print_error "Failed to create the database schema: ${MYSQL_SCHEMA}"; 
       exit 1;
     }
@@ -39,6 +39,17 @@ function ensure_database {
 function dump_database {
   print_info "Exporting the MySQL database to ${DIR_SQL}/database.sql"
   mysqldump --extended-insert=FALSE --complete-insert=TRUE ${MYSQL_AUTH} ${MYSQL_SCHEMA} > ${DIR_SQL}/database.sql
+}
+
+#
+# Will restore the database
+#
+function restore_database {
+  print_info "Restoring the MySQL database from ${DIR_SQL}/database.sql"
+  cat ${DIR_SQL}/database.sql | mysql ${MYSQL_AUTH} ${MYSQL_SCHEMA} || { 
+      print_error "Failed to restore the database";
+      exit 1;
+    }
 }
 
 

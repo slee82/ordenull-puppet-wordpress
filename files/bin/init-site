@@ -6,8 +6,11 @@ source "${DIR}/functions"
 
 ensure_database
 
-function cleanup_git {
+function cleanup_all {
+  print_warning "Cleaning up ${DIR_HOME}"
   rm -rf ${DIR_HOME}/.git
+  rm -rf ${DIR_HOME}/public/*
+  rm -rf ${DIR_HOME}/sql/*
   if [ "${DATABASE_CREATED}" -eq "1" ]; then
     remove_database
   fi
@@ -23,29 +26,41 @@ else
   git remote add origin ${GIT_REPO}
   git fetch || {
     print_error "Unable to fetch from ${GIT_REPO}";
-    cleanup_git
+    cleanup_all
     exit 1;
   }
 
   if [[ $(git branch -a) =~ "master" ]]; then
     if [ ! -z ${GIT_REPO} ]; then
-      
+
       print_info "Verifying the contents of ${GIT_REPO}"
 
       git cat-file -e origin/master:public/wp-config.php > /dev/null 2>&1 || {
         print_error "public/wp-config.php doesn't exist in ${GIT_REPO}, the repository is in a wrong format";
-        cleanup_git
+        cleanup_all
         exit 1;
       }
 
       git cat-file -e origin/master:sql/database.sql > /dev/null 2>&1 || {
         print_error "sql/database.sql doesn't exist in ${GIT_REPO}, the repository is in a wrong format";
-        cleanup_git
+        cleanup_all
         exit 1;
       }
 
       print_info "Checking out an existing WordPress website"
-      git reset --hard origin/master
+      git reset --hard origin/master || {
+        print_error "Unable to restore files using 'git reset --hard origin/master', please see the errors above";
+        cleanup_all
+        exit 1;
+      }
+
+      print_info "Restoring the MySQL database from ${DIR_SQL}/database.sql"
+      cat ${DIR_SQL}/database.sql | mysql ${MYSQL_AUTH} ${MYSQL_SCHEMA} || { 
+        print_error "Failed to restore the database";
+        cleanup_all
+        exit 1;
+      }
+
     fi
   else
     print_info "Creating a new WordPress website"
