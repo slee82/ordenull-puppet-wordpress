@@ -292,7 +292,7 @@ define wordpress::site (
   exec { "wordpress_generate_salts_$title":
     command => "$dir_manager/bin/init-salts",
     creates => "$dir_public/wp-salts.php",
-    require => File["$dir_manager/bin/init-salts"],
+    require => [ File["$dir_manager/bin/init-salts"], File["$dir_manager/tmp"], File["$dir_public"] ]
   }
 
   file { "$dir_public/wp-salts.php":
@@ -307,6 +307,7 @@ define wordpress::site (
     logoutput => true,
     timeout   => 360,
     require   => [
+                   File["$dir_tmp"],
                    File["$dir_manager/config"],
                    File["$dir_manager/bin/init-site"],
                    File["$dir_manager/bin/init-database"],
