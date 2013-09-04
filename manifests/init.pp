@@ -74,6 +74,12 @@ class wordpress (
   $overwrite_config = false,
 ) inherits wordpress::params {
 
+  if ! defined ( Package['mysql-client'] ) {
+    package { 'mysql-client':
+      ensure => present
+    }
+  }
+
   if ! defined ( Package['php5'] ) {
     package { 'php5':
       ensure => present
