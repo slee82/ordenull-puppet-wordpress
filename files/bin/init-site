@@ -60,7 +60,7 @@ else
         cleanup_all
         exit 1;
       }
-
+      set_permissions
     fi
   else
     print_info "Creating a new WordPress website"

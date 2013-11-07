@@ -83,3 +83,7 @@ function install_wordpress {
   ${DIR_MANAGER}/bin/init-database || { print_error "Failed to initialize the WordPress database"; exit 1; }
 }
 
+function set_permissions {
+  print_info "Setting ownership and permissions"
+  chown -R ${OWNER}:${GROUP} ${DIR_PUBLIC}
+}
