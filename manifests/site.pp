@@ -201,8 +201,10 @@ define wordpress::site (
   }
 
   # Create the supporting directory structure
-  file { $dir_public:
-    ensure => directory,
+  if ! defined( File[$dir_public] ) {
+    file { $dir_public:
+      ensure => directory,
+    }
   }
 
   file { $dir_sql:

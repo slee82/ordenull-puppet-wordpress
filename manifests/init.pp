@@ -62,19 +62,22 @@
 # Copyright 2013 Stan Borbat, unless otherwise noted.
 #
 class wordpress (
-  $mysql_host       = undef,
-  $mysql_user       = undef,
-  $mysql_pass       = undef,
-  $owner            = $wordpress::params::owner,
-  $group            = $wordpress::params::group,
-  $mode             = 0660,
-  $admin_email      = undef,
-  $admin_user       = 'admin',
-  $admin_pass       = '',
-  $overwrite_config = false,
+  $mysql_host          = undef,
+  $mysql_user          = undef,
+  $mysql_pass          = undef,
+  $owner               = $wordpress::params::owner,
+  $group               = $wordpress::params::group,
+  $mode                = 0660,
+  $admin_email         = undef,
+  $admin_user          = 'admin',
+  $admin_pass          = '',
+  $overwrite_config    = false,
+  $inclde_mysql_client = true,
 ) inherits wordpress::params {
 
-  if ! defined ( Package['mysql-client'] ) {
+  # This is to avoid an occasional conflict with other packages which include it
+  # Please see: https://github.com/puppetlabs/puppetlabs-mysql/pull/365#issuecomment-28100334
+  if $inclde_mysql_client == true and ! defined ( Package['mysql-client'] ) {
     package { 'mysql-client':
       ensure => present
     }
