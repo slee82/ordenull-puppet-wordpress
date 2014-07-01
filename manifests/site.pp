@@ -17,6 +17,9 @@
 # [*mysql_schema*]
 #   The name of the MySQL database to use for this WordPress site.
 #
+# [*mysql_prefix*]
+#   The table prefix in the MySQL database
+#
 # [*owner*]
 #   The system user that will own the WordPress files
 #
@@ -114,6 +117,7 @@ define wordpress::site (
   $mysql_user       = $wordpress::mysql_user,
   $mysql_pass       = $wordpress::mysql_pass,
   $mysql_schema     = undef,
+  $mysql_prefix     = 'wp_',
   $owner            = $wordpress::owner,
   $group            = $wordpress::group,
   $mode             = $wordpress::mode,
