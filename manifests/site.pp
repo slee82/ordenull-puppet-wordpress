@@ -45,6 +45,12 @@
 #   The WordPress admin password to set during a fresh installation. If
 #   left blank, a password will be generated and sent to the admin email.
 #
+# [*git_timeout*]
+#   Maximum number of seconds to wait for the code to checkout from GIT
+#   and the site to be created. If you receive a timeout error such as
+#   'Command exceeded timeout' from wordpress_initialize_jgcc_git then 
+#   you will want to increase this value from the 10 minute default.
+#
 # [*hostname*]
 #   The domain name for this installation. This will set the WP_HOME and 
 #   WP_SITEURL parameters in wp-puppet.php
@@ -124,6 +130,7 @@ define wordpress::site (
   $admin_email      = $wordpress::admin_email,
   $admin_user       = $wordpress::admin_user,
   $admin_pass       = $wordpress::admin_pass,
+  $git_timeout      = 600,
   $hostname         = undef,
   $home             = undef,
   $debug            = false,
@@ -311,7 +318,7 @@ define wordpress::site (
     command   => "$dir_manager/bin/init-site",
     creates   => "$dir_public/index.php",
     logoutput => true,
-    timeout   => 360,
+    timeout   => $git_timeout,
     require   => [
                    File["$dir_tmp"],
                    File["$dir_manager/config"],
